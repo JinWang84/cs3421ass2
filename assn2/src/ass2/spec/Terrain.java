@@ -3,8 +3,15 @@ package ass2.spec;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 
+import com.jogamp.opengl.util.texture.Texture;
+import com.jogamp.opengl.util.texture.TextureCoords;
+
+
+//import sailing.objects.Island;
 
 /**
  * COMMENT: Comment HeightMap 
@@ -18,7 +25,134 @@ public class Terrain {
     private List<Tree> myTrees;
     private List<Road> myRoads;
     private float[] mySunlight;
-
+    final public boolean debug = Game.debug;
+    boolean drawTriangle = false;
+    
+    public void draw(GL2 gl, Texture groundTexture, Texture treeTexture, Texture roadTexture){
+    	   	
+    	if(debug) {
+		System.out.println("HEIGHT is "+ mySize.getHeight() + " width is " + mySize.getWidth());
+	}
+		
+    	float textureTop, textureBottom, textureLeft, textureRight;
+    	TextureCoords textureCoords = groundTexture.getImageTexCoords();
+        textureTop = textureCoords.top();
+        textureBottom = textureCoords.bottom();
+        textureLeft = textureCoords.left();
+        textureRight = textureCoords.right();
+        
+        groundTexture.enable(gl);  
+        groundTexture.bind(gl);  
+    	for(int i = 0; i< mySize.getHeight()-1 ; i++) { //loop from 1 to 9 
+    		for(int y = 0; y< mySize.getWidth()-1; y++) {
+    			if(debug) {
+    				System.out.println("i:"+i+" y:"+y+" altitute:"+this.getGridAltitude(i, y));
+    			}
+    			//CCW
+    			gl.glColor3d(102/255d, 102/255d, 0.0);
+    	       // gl.glBindTexture(GL2.GL_TEXTURE_2D, texture);  
+	    	        if(!drawTriangle){
+	    	        float[] difColor = {102/255f, 1.0f, 51/255f, 1};
+	    	        gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_AMBIENT_AND_DIFFUSE, difColor, 0);
+	    			gl.glBegin(GL2.GL_QUADS);
+	    			double[] a = {i,this.getGridAltitude(i, y),y};
+	    			double[] b = {i,this.getGridAltitude(i, y+1),y+1};
+	    			double[] c = {i+1,this.getGridAltitude(i+1, y+1),y+1};
+	    			double[] n = MathUtil.normal(a, b, c);
+	    			
+	    			gl.glNormal3d(n[0], n[1], n[2]);
+	    			System.out.println("aaaaaaaaaaaaaa"+n[0]+" "+n[1]+" "+n[2]);
+	    			gl.glTexCoord2f(textureLeft, textureBottom);//����
+	    			gl.glVertex3d(i,this.getGridAltitude(i, y),y);
+	    			gl.glTexCoord2f(textureRight, textureBottom); //����
+	    			gl.glVertex3d(i,this.getGridAltitude(i, y+1),y+1);
+	    			gl.glTexCoord2f(textureRight, textureTop);//����
+	    			gl.glVertex3d(i+1,this.getGridAltitude(i+1, y+1),y+1);
+	    			gl.glTexCoord2f(textureLeft, textureTop);//����
+	    			gl.glVertex3d(i+1,this.getGridAltitude(i+1,y),y);
+	    			gl.glEnd();
+    	        } else {
+    	        	float[] difColor = {1.0f, 1.0f, 1.0f, 1};
+	    	        gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_AMBIENT_AND_DIFFUSE, difColor, 0);
+	    			
+    	        	double[] a = {i,this.getGridAltitude(i, y),y};
+	    			double[] b = {i,this.getGridAltitude(i, y+1),y+1};
+	    			double[] c = {i+1,this.getGridAltitude(i+1, y),y};
+	    			double[] n = MathUtil.normal(a, b, c);
+	    			
+	    			gl.glNormal3d(n[0], n[1], n[2]);
+	    			gl.glBegin(GL.GL_TRIANGLES);
+	    			gl.glTexCoord2f(textureLeft, textureBottom);//����
+	    			gl.glVertex3d(i,this.getGridAltitude(i, y),y);
+	    			gl.glTexCoord2f(textureRight, textureBottom); //����
+	    			gl.glVertex3d(i,this.getGridAltitude(i, y+1),y+1);
+	    			gl.glTexCoord2f(textureLeft, textureTop);//����
+	    			gl.glVertex3d(i+1,this.getGridAltitude(i+1,y),y);
+	    			gl.glEnd();
+	    			
+	    			gl.glBegin(GL.GL_TRIANGLES);
+	    			gl.glTexCoord2f(textureRight, textureBottom); //����
+	    			gl.glVertex3d(i,this.getGridAltitude(i, y+1),y+1);
+	    			gl.glTexCoord2f(textureRight, textureTop);//����
+	    			gl.glVertex3d(i+1,this.getGridAltitude(i+1, y+1),y+1);
+	    			gl.glTexCoord2f(textureLeft, textureTop);//����
+	    			gl.glVertex3d(i+1,this.getGridAltitude(i+1,y),y);
+	    			gl.glEnd();
+    	        }
+    			
+    			if(!drawTriangle){
+	    			gl.glColor3d(0.0, 0.0, 0.0);
+	    			//CCW
+	    			gl.glBegin(GL.GL_LINE_LOOP);
+	    			gl.glVertex3d(i,this.getGridAltitude(i, y)+0.01,y);
+	    			gl.glVertex3d(i,this.getGridAltitude(i, y+1)+0.01,y+1);
+	    			gl.glVertex3d(i+1,this.getGridAltitude(i+1, y+1)+0.01,y+1);
+	    			gl.glVertex3d(i+1,this.getGridAltitude(i+1,y)+0.01,y);
+	    			gl.glEnd();
+	    			gl.glDisable( GL.GL_POLYGON_OFFSET_FILL ); 
+    			} else {
+    				gl.glColor3d(0.0, 0.0, 0.0);
+    				gl.glBegin(GL.GL_LINE_LOOP);
+	    			gl.glVertex3d(i,this.getGridAltitude(i, y),y);
+	    			gl.glVertex3d(i,this.getGridAltitude(i, y+1),y+1);
+	    			gl.glVertex3d(i+1,this.getGridAltitude(i+1,y),y);
+	    			gl.glEnd();
+	    			
+	    			gl.glBegin(GL.GL_LINE_LOOP);
+	    			gl.glVertex3d(i,this.getGridAltitude(i, y+1)+0.01,y+1);
+	    			gl.glVertex3d(i+1,this.getGridAltitude(i+1, y+1)+0.01,y+1);
+	    			gl.glVertex3d(i+1,this.getGridAltitude(i+1,y)+0.01,y);
+	    			gl.glEnd();
+    			}
+    		}
+    	}
+    	drawAvatar(gl);
+    	drawTrees(gl,treeTexture);
+    	drawRoad(gl, roadTexture);
+    }
+    
+    public Avatar getAvatar(){
+    	return avatar;
+    }
+    
+    private Avatar avatar = new Avatar(this);
+    public void drawAvatar(GL2 gl){    	
+    	avatar.draw(gl);
+    }
+    
+    public void drawTrees(GL2 gl,Texture TreeTexture){
+    	for(Tree tree : myTrees){
+    		tree.draw(gl,TreeTexture);
+    	}
+    }
+    
+    public void drawRoad(GL2 gl,Texture texture){
+    	for(Road road: myRoads){
+    		road.draw(gl, texture);
+    	}
+    }
+    
+    
     /**
      * Create a new terrain
      *
@@ -119,33 +253,29 @@ public class Terrain {
      * @return
      */
     public double altitude(double x, double z) {
-	if (x < 0 || z < 0 || x > mySize.width - 1 || z > mySize.height - 1) {
-	    return 0;
-	}
+	double altitude = 0;
+        int xc = (int) Math.ceil(x);
+    	int xf = (int) Math.floor(x);
+    	int zc = (int) Math.ceil(z);
+    	int zf = (int) Math.floor(z);    	
+    	
+    	//     (xf, zf)  (x, zf) (xc, zf)   
+        // 	    +-------+-----+  
+        //     	    |       |     |
+        //          |       |     |
+    	//  (xf, z) +-------+-----+ (xc, z)
+        //          |     (x, z)  |
+        //  	    +-------------+
+        //     (xf, zc)          (xc, zc)
+
+    	// altitude at (xf, z)
+    	double alLeft = (z - zc) / (zf - zc) * (getGridAltitude(xf, zf) - getGridAltitude(xf, zc)) + getGridAltitude(xf, zc);
+    	// altitude at (xc, z)
+    	double alRight = (z - zc) / (zf - zc) * (getGridAltitude(xc, zf) - getGridAltitude(xc, zc)) + getGridAltitude(xc, zc);
+    	// altitude at (x, z)
+	altitude = (x - xc) / (xf - xc) * (alLeft - alRight) + alRight;
 	
-        int x1 = (int) Math.floor(x);
-        int x2 = (int) Math.ceil(x);
-        int z1 = (int) Math.floor(z);
-        int z2 = (int) Math.ceil(z);
-        
-        double alBottomLeft = getGridAltitude(x1, z2); // altitude on bottom left
-        double alBottomRight = getGridAltitude(x2, z2); // altitude on bottom right
-        double alTopLeft = getGridAltitude(x1, z1); // altitude on top left
-        double alTopRight = getGridAltitude(x2, z1); // altitude on top right
-        
-        double xBottomGrad = grad(x1, x2, alBottomLeft, alBottomRight); // gradient of bottom x 
-        double xTopGrad = grad(x1, x2, alTopLeft, alTopRight); // gradient of top x
-        
-        double interBottom = xBottomGrad * (x - x1) + alBottomLeft; // bottom interpolated point
-        double interTop = xTopGrad * (x - x1) + alTopLeft; // top interpolated point
-        
-        double yGrad = grad(z1, z2, interTop, interBottom);
-        
-        return yGrad * (z - z1) + interTop;        
-    }
-    
-    private double grad(double x1, double x2, double y1, double y2) {
-	return (y2 - y1) / (x2 - x1); // calculate the gradient
+	return altitude;
     }
 
     /**
@@ -157,10 +287,9 @@ public class Terrain {
      */
     public void addTree(double x, double z) {
         double y = altitude(x, z);
-        Tree tree = new Tree(x, y, z);
+        Tree tree = new Tree(x, y, z,this);
         myTrees.add(tree);
-    }
-
+    }    
 
     /**
      * Add a road. 
@@ -169,56 +298,8 @@ public class Terrain {
      * @param z
      */
     public void addRoad(double width, double[] spine) {
-        Road road = new Road(width, spine);
+        Road road = new Road(width, spine,this);
         myRoads.add(road);        
-    }
-
-    public void draw(GL2 gl) {
-	for (int x = 0 ; x < mySize.getWidth() - 1 ; x++) {
-		for (int z = 0 ; z < mySize.getHeight() - 1 ; z++) {
-			Triangle triangleLeft = new Triangle (x, x, x + 1,
-							      getGridAltitude(x, z), getGridAltitude(x, z + 1), getGridAltitude(x + 1, z),
-							      z, z + 1, z);			
-			double[] leftNormal = calculateNormal(triangleLeft);
-
-			Triangle triangleRight = new Triangle (x, x + 1, x + 1,
-	    						       getGridAltitude(x, z + 1), getGridAltitude(x + 1, z + 1), getGridAltitude(x + 1, z),
-	    						       z + 1, z + 1, z);
-			double[] rightNormal = calculateNormal(triangleRight);
-	    			
-			gl.glBegin(GL2.GL_TRIANGLES); // Left Triangle
-				gl.glNormal3d(leftNormal[0],leftNormal[1],leftNormal[2]);
-				gl.glVertex3d(triangleLeft.getX()[0], triangleLeft.getY()[0], triangleLeft.getZ()[0]); // Top
-				gl.glVertex3d(triangleLeft.getX()[1], triangleLeft.getY()[1], triangleLeft.getZ()[1]); // Bottom Left
-				gl.glVertex3d(triangleLeft.getX()[2], triangleLeft.getY()[2], triangleLeft.getZ()[2]); // Bottom Right
-			gl.glEnd();
-			
-			gl.glBegin(GL2.GL_TRIANGLES); // Right Triangle
-				gl.glNormal3d(rightNormal[0],rightNormal[1],rightNormal[2]);
-		    		gl.glVertex3d(triangleRight.getX()[0], triangleRight.getY()[0], triangleRight.getZ()[0]); // Top
-		    		gl.glVertex3d(triangleRight.getX()[1], triangleRight.getY()[1], triangleRight.getZ()[1]); // Bottom Right
-		    		gl.glVertex3d(triangleRight.getX()[2], triangleRight.getY()[2], triangleRight.getZ()[2]); // Top Right
-	    		gl.glEnd();
-	    			
-		}
-	}
-    }
-	    
-    public double[] calculateNormal(Triangle triangle) {
-	double[] normal = {0,0,0};
-		    	
-	for (int i = 0 ; i < triangle.getVertices() ; i++) {
-		normal[0] += (triangle.getY()[i] - triangle.getY()[i + 1]) *
-				(triangle.getZ()[i] + triangle.getZ()[i + 1]);
-	    	
-		normal[1] += (triangle.getZ()[i] - triangle.getZ()[i + 1]) *
-				(triangle.getX()[i] + triangle.getX()[i + 1]);
-	    	
-		normal[2] += (triangle.getX()[i] - triangle.getX()[i + 1]) *
-				(triangle.getY()[i] + triangle.getY()[i + 1]);
-	}
-	
-	return normal;
     }
 
 }
